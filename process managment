@@ -1,0 +1,112 @@
+import os
+import time
+import subprocess
+import platform
+import psutil
+import sys
+from multiprocessing import Process
+
+# ------------------- OUTPUT REDIRECTION -------------------
+log_path = os.path.join(os.path.dirname(__file__), "output.txt")
+output_log = open(log_path, "w")
+sys.stdout = output_log  # redirect print output to file
+
+# ------------------- TASK 1 -------------------
+def worker(pid):
+    print(f"[Worker {pid}] PID={os.getpid()}, PPID={os.getppid()}")
+    time.sleep(1)
+
+def create_processes(count=3):
+    print("\n--- Task 1: Creating Multiple Processes ---")
+    active = []
+    for i in range(count):
+        proc = Process(target=worker, args=(i + 1,))
+        proc.start()
+        active.append(proc)
+    for proc in active:
+        proc.join()
+    print("All worker processes finished successfully.\n")
+
+# ------------------- TASK 2 -------------------
+def execute_system_commands():
+    print("\n--- Task 2: System Command Execution ---")
+
+    cmds = ["dir", "date /T", "whoami"] if platform.system() == "Windows" else ["ls", "date", "whoami"]
+
+    for c in cmds:
+        print(f"\nCommand: {c}")
+        subprocess.run(c, shell=True)
+    print("\nCommand execution complete.\n")
+
+# ------------------- TASK 3 -------------------
+def child_run():
+    print(f"[Child Process] PID={os.getpid()} is running...")
+    time.sleep(2)
+    print("[Child Process] Done.\n")
+
+def simulate_zombie_orphan():
+    print("\n--- Task 3: Zombie & Orphan Process Simulation ---")
+
+    if platform.system() != "Windows":
+        pid = os.fork()
+        if pid == 0:
+            print(f"[Child] PID={os.getpid()} executing...")
+            time.sleep(2)
+            print("[Child] Completed execution.")
+        else:
+            print(f"[Parent] PID={os.getpid()} waiting for child PID={pid}...")
+            time.sleep(3)
+            os.wait()
+            print("[Parent] Child process collected, no zombie remains.")
+    else:
+        proc = Process(target=child_run)
+        proc.start()
+        print("[Parent Sim] Waiting for simulated child...")
+        time.sleep(2)
+        proc.join()
+        print("[Parent Sim] Child completed.\n")
+
+# ------------------- TASK 4 -------------------
+def show_process_details():
+    print("\n--- Task 4: Display Process Information ---")
+    print(f"PID         : {os.getpid()}")
+    print(f"Parent PID  : {os.getppid()}")
+    print(f"System      : {platform.system()}")
+    print(f"Script Name : {os.path.basename(__file__)}")
+
+    try:
+        process = psutil.Process(os.getpid())
+        print(f"Memory Used : {process.memory_info().rss / 1024 ** 2:.2f} MB")
+        print(f"CPU Details : {process.cpu_times()}")
+    except Exception:
+        pass
+    print()
+
+# ------------------- TASK 5 -------------------
+def simulate_priority_order():
+    print("\n--- Task 5: Simulating Process Priorities ---")
+    priority_levels = [
+        ("High", 1),
+        ("Normal", 2),
+        ("Low", 3)
+    ]
+    for label, delay in priority_levels:
+        print(f"Executing {label} Priority Task...")
+        time.sleep(delay)
+    print("All simulated priority processes executed.\n")
+
+# ------------------- MAIN -------------------
+if __name__ == "__main__":
+    print("\n=== PROCESS MANAGEMENT LAB (Modified Version) ===")
+
+    create_processes()
+    execute_system_commands()
+    simulate_zombie_orphan()
+    show_process_details()
+    simulate_priority_order()
+
+    print("=== LAB COMPLETED SUCCESSFULLY ===\n")
+
+    output_log.close()
+    sys.stdout = sys.__stdout__
+    print(f"Results saved to: {log_path}")
