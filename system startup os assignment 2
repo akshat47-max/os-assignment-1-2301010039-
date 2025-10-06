@@ -1,0 +1,55 @@
+"""
+SYSTEM BOOT SIMULATION (Assignment 2)
+Author : Akshat Singh
+Course : Operating Systems Lab
+File   : startup_simulator.py
+
+Objective:
+Emulate a basic system startup process using Python.
+This program demonstrates process creation, execution, and graceful termination.
+Each process writes its activity logs to a log file via the multiprocessing and logging modules.
+"""
+
+import multiprocessing
+import time
+import logging
+import os
+import platform
+
+# ---------- STEP 1: Setup Logging ----------
+# Store log in the same directory as the script
+log_path = os.path.join(os.path.dirname(__file__), "startup_log.txt")
+
+logging.basicConfig(
+    filename=log_path,
+    level=logging.INFO,
+    format="%(asctime)s - %(processName)s - %(message)s"
+)
+
+# ---------- STEP 2: Define Simulated Process ----------
+def boot_process(name):
+    """
+    Simulates a boot-time process.
+    Logs when the process begins and ends.
+    """
+    logging.info(f"{name} initialized")
+    time.sleep(2)  # mimic workload
+    logging.info(f"{name} completed")
+
+# ---------- STEP 3: Main Program ----------
+if __name__ == "__main__":
+    print("Boot sequence initiated...\n")
+
+    # Spawn multiple simulated processes
+    tasks = []
+    for i in range(1, 3):
+        proc = multiprocessing.Process(target=boot_process, args=(f"BootTask-{i}",))
+        proc.start()
+        tasks.append(proc)
+
+    # ---------- STEP 4: Wait for all processes ----------
+    for proc in tasks:
+        proc.join()
+
+    print("System shutdown completed.\n")
+    print(f"Activity log stored at: {log_path}")
